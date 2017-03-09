@@ -40,7 +40,7 @@ app.use(function(req, res, next) {
   payload = {hostname: config.target, method: req.method, path: req.url};
   //console.log(req);
   opt = aws4.sign(payload, {asecretAccessKey:config.access_key, accessKeyId: config.secret_key});
-  opt['uri'] = 'https://' + config.target + req.url;
+  opt['uri'] = config.protocol + '://' + config.target + req.url;
   request(opt, function(error, reply){
     console.log(reply.body);
     res.status(reply.statusCode).send(reply.body);
