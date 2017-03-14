@@ -22,8 +22,24 @@ app.set('view engine', 'jade');
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+//app.use(bodyParser.json());
+//app.use(bodyParser.raw());
+//app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use (function(req, res, next) {
+  var data='';
+  req.setEncoding('utf8');
+  req.on('data', function(chunk) {
+    data += chunk;
+  });
+
+  req.on('end', function() {
+    req.body = data;
+    next();
+  });
+});
+
+
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -32,15 +48,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  //var err = new Error('Not Found');
-  //err.status = 404;
-  //next(err);
-  //capture all req
   body = {method:req.method, headers:req.headers, url: req.url, body: req.body, params: req.params, query: req.query};
-  payload = {hostname: config.target, method: req.method, path: req.url};
-  //console.log(req);
-  opt = aws4.sign(payload, {asecretAccessKey:config.access_key, accessKeyId: config.secret_key});
+
+  payload = {hostname: config.target, method: req.method, path: req.url, headers: req.headers};
+
+  header = req.headers;
+  opt = aws4.sign(payload, {secretAccessKey:config.secret_key, accessKeyId: config.access_key});
+
+  //setting body and uri
   opt['uri'] = config.protocol + '://' + config.target + req.url;
+  opt['body'] = req.body;
   request(opt, function(error, reply){
     console.log(reply.body);
     res.status(reply.statusCode).send(reply.body);
