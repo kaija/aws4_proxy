@@ -48,16 +48,21 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  body = {method:req.method, headers:req.headers, url: req.url, body: req.body, params: req.params, query: req.query};
 
-  payload = {hostname: config.target, method: req.method, path: req.url, headers: req.headers};
-
+  //copy header from request
   header = req.headers;
-  opt = aws4.sign(payload, {secretAccessKey:config.secret_key, accessKeyId: config.access_key});
+  //replace host option in header
+  header['host'] = config.target;
 
-  //setting body and uri
+  console.log(header);
+  payload = {hostname: config.target, method: req.method, path: req.url, headers: req.headers, service: 'execute-api'};
+  //sign
+  opt = aws4.sign(payload, {secretAccessKey:config.secret_key, accessKeyId: config.access_key});
   opt['uri'] = config.protocol + '://' + config.target + req.url;
   opt['body'] = req.body;
+  opt = aws4.sign(opt, {secretAccessKey:config.secret_key, accessKeyId: config.access_key});
+
+  //setting body and uri
   request(opt, function(error, reply){
     console.log(reply.body);
     res.status(reply.statusCode).send(reply.body);
