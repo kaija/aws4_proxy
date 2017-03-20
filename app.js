@@ -52,16 +52,16 @@ app.use(function(req, res, next) {
   //copy header from request
   header = req.headers;
   //replace host option in header
-  header['host'] = config.target;
-
+  delete header['host'];
   console.log(header);
-  payload = {hostname: config.target, method: req.method, path: req.url, headers: req.headers, service: 'execute-api'};
-  //sign
-  opt = aws4.sign(payload, {secretAccessKey:config.secret_key, accessKeyId: config.access_key});
+  opt = {};
   opt['uri'] = config.protocol + '://' + config.target + req.url;
+  opt['headers'] = header;
   opt['body'] = req.body;
-  opt = aws4.sign(opt, {secretAccessKey:config.secret_key, accessKeyId: config.access_key});
-
+  opt['method'] = req.method;
+  opt['aws'] = {key: config.access_key, secret: config.secret_key, sign_version: 4};
+  console.log(opt);
+  console.log(typeof(opt['body']));
   //setting body and uri
   request(opt, function(error, reply){
     console.log(reply.body);
