@@ -64,8 +64,12 @@ app.use(function(req, res, next) {
   console.log(typeof(opt['body']));
   //setting body and uri
   request(opt, function(error, reply){
-    console.log(reply.body);
-    res.status(reply.statusCode).send(reply.body);
+    if (error) {
+      console.log(error);
+    }else{
+      console.log(reply.body);
+      res.status(reply.statusCode).send(reply.body);
+    }
   });
 });
 
